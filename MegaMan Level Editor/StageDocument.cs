@@ -8,7 +8,7 @@ using System.Drawing;
 namespace MegaMan.LevelEditor
 {
     // ========= What this IS, and IS NOT ===============
-    // This class controls a single stage. NOT the whole damn project!
+    // This class controls a single stage. NOT the whole --==**!!damn!!**==-- project!
     // There should be no way to touch the stage, except through
     // one of these objects! All form updates should be event
     // driven, coming from this class!

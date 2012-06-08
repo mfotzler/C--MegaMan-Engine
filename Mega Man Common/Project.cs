@@ -3,12 +3,19 @@ using System.Text;
 using System.IO;
 using System.Xml.Linq;
 using System.Xml;
+using System;
 
 namespace MegaMan.Common
 {
     public class StageInfo
     {
-        public string Name { get; set; }
+        public String Name
+        {
+            get
+            {
+                return Path.GetFileNameWithoutExtension(StagePath.Absolute);
+            }
+        }
         public FilePath StagePath { get; set; }
         public HandlerTransfer WinHandler { get; set; }
         public HandlerTransfer LoseHandler { get; set; }
@@ -91,6 +98,15 @@ namespace MegaMan.Common
             ScreenHeight = 224;
         }
 
+        public Project(String baseDir)
+        {
+            this.BaseDir = baseDir;
+            this.GameFile = baseDir + "\\game.xml";
+            // sensible defaults where possible
+            ScreenWidth = 256;
+            ScreenHeight = 224;
+        }
+
         public void Load(string path)
         {
             if (!File.Exists(path)) throw new FileNotFoundException("The project file does not exist: " + path);
@@ -131,7 +147,6 @@ namespace MegaMan.Common
                 foreach (XElement stageNode in stagesNode.Elements("Stage"))
                 {
                     var info = new StageInfo();
-                    info.Name = stageNode.RequireAttribute("name").Value;
                     info.StagePath = FilePath.FromRelative(stageNode.RequireAttribute("path").Value, this.BaseDir);
 
                     var winNode = stageNode.Element("Win");
@@ -213,7 +228,6 @@ namespace MegaMan.Common
             foreach (var info in stages)
             {
                 writer.WriteStartElement("Stage");
-                writer.WriteAttributeString("name", info.Name);
                 writer.WriteAttributeString("path", info.StagePath.Relative);
 
                 if (info.WinHandler != null)

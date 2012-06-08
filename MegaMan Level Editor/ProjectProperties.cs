@@ -94,7 +94,7 @@ namespace MegaMan.LevelEditor
                     return;
                 }
 
-                editor = ProjectEditor.CreateNew();
+                editor = ProjectEditor.CreateNew(baseDir);
             }
 
             editor.Name = (textName.Text == "")? "Untitled" : textName.Text;

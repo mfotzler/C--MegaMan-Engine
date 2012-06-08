@@ -97,9 +97,9 @@ namespace MegaMan.LevelEditor
 
         public event Action<StageDocument> StageAdded;
 
-        public static ProjectEditor CreateNew()
+        public static ProjectEditor CreateNew(String baseDir)
         {
-            var p = new ProjectEditor();
+            var p = new ProjectEditor(baseDir);
             return p;
         }
 
@@ -142,6 +142,11 @@ namespace MegaMan.LevelEditor
         private ProjectEditor()
         {
             Project = new Project();
+        }
+
+        private ProjectEditor(String baseDir)
+        {
+            Project = new Project(baseDir);
         }
 
         private void LoadIncludes()
@@ -195,7 +200,7 @@ namespace MegaMan.LevelEditor
             
             openStages.Add(name, stage);
 
-            var info = new StageInfo {Name = name, StagePath = FilePath.FromAbsolute(stagePath, BaseDir)};
+            var info = new StageInfo {StagePath = FilePath.FromAbsolute(stagePath, BaseDir)};
             Project.AddStage(info);
 
             Save(); // need to save the reference to the new stage

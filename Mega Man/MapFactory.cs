@@ -72,7 +72,7 @@ namespace MegaMan.Engine
             if (info.LoseHandler == null)
             {
                 // repeat this stage
-                handler.LoseHandler = new HandlerTransfer { Fade = true, Type = HandlerType.Stage, Name = info.Name };
+                handler.LoseHandler = new HandlerTransfer { Fade = true, Type = HandlerType.Stage, Name = map.Name };
             }
             else
             {
