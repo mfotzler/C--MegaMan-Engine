@@ -1,0 +1,59 @@
+﻿<Window x:Class="WPFEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Mega Man Level Editor" Height="776" Width="1107">
+    <Grid>
+        <Menu>
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Command="New"></MenuItem>
+                <MenuItem Header="_Open" Command="Open"></MenuItem>
+                <MenuItem Header="_Recent"></MenuItem>
+                <Separator />
+                <MenuItem Header="_Save" Command="Save"></MenuItem>
+                <Separator />
+                <MenuItem Header="_Close" Command="Close"></MenuItem>
+                <MenuItem Header="_Quit"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="Undo" Command="Undo"></MenuItem>
+                <MenuItem Header="Redo" Command="Redo"></MenuItem>
+                <Separator />
+                <MenuItem Header="Copy" Command="Copy"></MenuItem>
+                <MenuItem Header="Paste" Command="Paste"></MenuItem>
+                <MenuItem Header="Paste as Brush"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Tiles"></MenuItem>
+                <MenuItem Header="Blocking"></MenuItem>
+                <MenuItem Header="Entities"></MenuItem>
+                <MenuItem Header="Grid"></MenuItem>
+                <MenuItem Header="Animate"></MenuItem>
+                <MenuItem Header="Joins"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Stage">
+                <MenuItem Header="New Stage"></MenuItem>
+                <MenuItem Header="Properties"></MenuItem>
+                <MenuItem Header="Stage Select..."></MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Screen">
+                <MenuItem Header="Split Screen"></MenuItem>
+                <MenuItem Header="Merge Screen"></MenuItem>
+                <Separator />
+                <MenuItem Header="Clear Screen"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Windows">
+                <MenuItem Header="Brushes"></MenuItem>
+                <MenuItem Header="Project"></MenuItem>
+                <MenuItem Header="History"></MenuItem>
+                <MenuItem Header="Entities"></MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Test">
+                <MenuItem Header="Run Project"></MenuItem>
+                <MenuItem Header="Run Stage"></MenuItem>
+                <Separator />
+                <MenuItem Header="Set Engine Path"></MenuItem>
+            </MenuItem>
+        </Menu>
+
+    </Grid>
+</Window>
