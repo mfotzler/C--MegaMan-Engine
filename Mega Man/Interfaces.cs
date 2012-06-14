@@ -5,19 +5,7 @@ using MegaMan.Common;
 
 namespace MegaMan.Engine
 {
-    public interface IHandleGameEvents
-    {
-        void StartHandler();
-        void StopHandler();
-        void PauseHandler();
-        void ResumeHandler();
-        void StopDrawing();
-        void StartDrawing();
-
-        event Action<HandlerTransfer> End;
-    }
-
-    public interface IScreenInformation
+    public interface IEntityContainer
     {
         int TileSize { get; }
         float OffsetX { get; }
@@ -25,13 +13,15 @@ namespace MegaMan.Engine
         MapSquare SquareAt(int x, int y);
         IEnumerable<MapSquare> Tiles { get; }
         MegaMan.Common.Tile TileAt(int tx, int ty);
-        void AddSpawnedEntity(GameEntity entity);
+        void AddEntity(GameEntity entity);
+        IEnumerable<GameEntity> GetEntities(string name);
+        void ClearEntities();
         bool IsOnScreen(float x, float y);
     }
 
-    public interface IGameplayContainer : IHandleGameEvents
+    public interface IGameplayContainer
     {
-        GameEntity Player { get; }
+        IEntityContainer Entities { get; }
 
         event Action GameThink;
 
@@ -40,6 +30,17 @@ namespace MegaMan.Engine
         event Action GameReact;
 
         event Action GameCleanup;
+
+        event GameRenderEventHandler Draw;
+
+        event Action<HandlerTransfer> End;
+
+        void StartHandler();
+        void StopHandler();
+        void PauseHandler();
+        void ResumeHandler();
+        void StopDrawing();
+        void StartDrawing();
     }
 
     public abstract class Component

@@ -31,7 +31,7 @@ namespace MegaMan.Engine
         private Project project;
 
         private string currentPath;
-        private Stack<IHandleGameEvents> handlerStack;
+        private Stack<IGameplayContainer> handlerStack;
 
         public int PixelsAcross { get; private set; }
         public int PixelsDown { get; private set; }
@@ -48,8 +48,6 @@ namespace MegaMan.Engine
             }
         }
 
-        public bool Paused { get; private set; }
-
         public string BasePath { get; private set; }
 
         public Player Player { get; private set; }
@@ -65,9 +63,6 @@ namespace MegaMan.Engine
             }
             CurrentGame = new Game();
             CurrentGame.LoadFile(path, pathArgs);
-            // TODO: load fonts from xml
-            FontSystem.LoadFont("Big", Path.Combine(Game.CurrentGame.BasePath, @"images\font.png"), 8, 0);
-            FontSystem.LoadFont("Boss", Path.Combine(Game.CurrentGame.BasePath, @"images\font_boss.png"), 8, 0);
         }
 
         public void Unload()
@@ -83,6 +78,7 @@ namespace MegaMan.Engine
             HealthMeter.Unload();
             Scene.Unload();
             Menu.Unload();
+            Palette.Unload();
             CurrentGame = null;
         }
 
@@ -96,7 +92,7 @@ namespace MegaMan.Engine
         {
             Gravity = 0.25f;
             GravityFlip = false;
-            handlerStack = new Stack<IHandleGameEvents>();
+            handlerStack = new Stack<IGameplayContainer>();
         }
 
         private void LoadFile(string path, List<string> pathArgs = null)
@@ -141,7 +137,7 @@ namespace MegaMan.Engine
                 switch (parts[0].ToUpper())
                 {
                     case "SCENE":
-                        StartScene(name);
+                        StartScene(new HandlerTransfer() { Name = name, Mode = HandlerMode.Next });
                         break;
 
                     case "STAGE":
@@ -157,7 +153,7 @@ namespace MegaMan.Engine
                         break;
 
                     case "MENU":
-                        StartMenu(name);
+                        StartMenu(new HandlerTransfer() { Name = name, Mode = HandlerMode.Next });
                         break;
 
                     default:
@@ -176,7 +172,7 @@ namespace MegaMan.Engine
             Player = new Player();
         }
 
-        private static void IncludeXmlFile(string path)
+        private void IncludeXmlFile(string path)
         {
             try
             {
@@ -190,7 +186,7 @@ namespace MegaMan.Engine
                             break;
 
                         case "Functions":
-                            EffectParser.LoadEffects(element);
+                            EffectParser.LoadEffectsList(element);
                             break;
 
                         case "Sounds":
@@ -203,6 +199,14 @@ namespace MegaMan.Engine
 
                         case "Menu":
                             Menu.Load(element);
+                            break;
+
+                        case "Fonts":
+                            FontSystem.Load(element);
+                            break;
+
+                        case "Palettes":
+                            Palette.LoadPalettes(element, this.BasePath);
                             break;
 
                         default:
@@ -263,7 +267,7 @@ namespace MegaMan.Engine
                 case HandlerMode.Pop:
                     if (handler.Fade)
                     {
-                        IHandleGameEvents top = null;
+                        IGameplayContainer top = null;
                         if (handlerStack.Count > 0)
                         {
                             top = handlerStack.Pop();
@@ -338,7 +342,7 @@ namespace MegaMan.Engine
                 switch (handler.Type)
                 {
                     case HandlerType.Scene:
-                        StartScene(handler.Name);
+                        StartScene(handler);
                         break;
 
                     case HandlerType.Stage:
@@ -346,42 +350,34 @@ namespace MegaMan.Engine
                         break;
 
                     case HandlerType.Menu:
-                        StartMenu(handler.Name);
+                        StartMenu(handler);
                         break;
                 }
             }
         }
 
-        private void StartMenu(string name)
+        private void StartMenu(HandlerTransfer handler)
         {
-            var menu = Menu.Get(name);
+            var menu = Menu.Get(handler.Name);
             menu.End += ProcessHandler;
 
-            if (handlerStack.Count > 0)
+            if (handler.Mode == HandlerMode.Push && handlerStack.Count > 0 && handlerStack.Peek() is IGameplayContainer)
             {
-                var top = handlerStack.Peek();
-                if (top != null && top is IGameplayContainer && ((IGameplayContainer)top).Player != null)
-                {
-                    menu.Player = ((IGameplayContainer)top).Player;
-                }
+                menu.Entities = (handlerStack.Peek() as IGameplayContainer).Entities;
             }
 
             menu.StartHandler();
             handlerStack.Push(menu);
         }
 
-        private void StartScene(string name)
+        private void StartScene(HandlerTransfer handler)
         {
-            var scene = Scene.Get(name);
+            var scene = Scene.Get(handler.Name);
             scene.End += ProcessHandler;
 
-            if (handlerStack.Count > 0)
+            if (handler.Mode == HandlerMode.Push && handlerStack.Count > 0 && handlerStack.Peek() is IGameplayContainer)
             {
-                var top = handlerStack.Peek();
-                if (top != null && top is IGameplayContainer && ((IGameplayContainer)top).Player != null)
-                {
-                    scene.Player = ((IGameplayContainer)top).Player;
-                }
+                scene.Entities = (handlerStack.Peek() as IGameplayContainer).Entities;
             }
 
             scene.StartHandler();
@@ -417,16 +413,6 @@ namespace MegaMan.Engine
             }
         }
 
-        public void Pause()
-        {
-            Paused = true;
-        }
-
-        public void Unpause()
-        {
-            Paused = false;
-        }
-
         #region Debug Menu
 
         public void DebugEmptyHealth()
@@ -436,7 +422,7 @@ namespace MegaMan.Engine
             var map = handlerStack.Peek() as MapHandler;
             if (map != null)
             {
-                map.GamePlay.Player.SendMessage(new DamageMessage(null, float.PositiveInfinity));
+                map.Player.SendMessage(new DamageMessage(null, float.PositiveInfinity));
             }
         }
 
@@ -447,7 +433,7 @@ namespace MegaMan.Engine
             var map = handlerStack.Peek() as MapHandler;
             if (map != null)
             {
-                map.GamePlay.Player.SendMessage(new HealMessage(null, float.PositiveInfinity));
+                map.Player.SendMessage(new HealMessage(null, float.PositiveInfinity));
             }
         }
 
@@ -458,7 +444,7 @@ namespace MegaMan.Engine
             var map = handlerStack.Peek() as MapHandler;
             if (map != null)
             {
-                var weaponComponent = map.GamePlay.Player.GetComponent<WeaponComponent>();
+                var weaponComponent = map.Player.GetComponent<WeaponComponent>();
                 if (weaponComponent != null)
                 {
                     weaponComponent.AddAmmo(-1 * weaponComponent.Ammo(weaponComponent.CurrentWeapon));
@@ -473,7 +459,7 @@ namespace MegaMan.Engine
             var map = handlerStack.Peek() as MapHandler;
             if (map != null)
             {
-                var weaponComponent = map.GamePlay.Player.GetComponent<WeaponComponent>();
+                var weaponComponent = map.Player.GetComponent<WeaponComponent>();
                 if (weaponComponent != null)
                 {
                     weaponComponent.AddAmmo(weaponComponent.MaxAmmo(weaponComponent.CurrentWeapon));

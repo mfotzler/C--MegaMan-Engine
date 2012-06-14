@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace MegaMan.Engine
 {
-    public class MapHandler : IHandleGameEvents
+    public class MapHandler : IGameplayContainer
     {
         private int playerDeadCount;
 
@@ -25,6 +25,8 @@ namespace MegaMan.Engine
 
         private readonly Music music;
 
+        private ScreenHandler _currentScreen;
+
         private Dictionary<string, ScreenHandler> screens;
 
         public Dictionary<string, bool[]> EntityRespawnable
@@ -36,24 +38,56 @@ namespace MegaMan.Engine
         private JoinHandler currentJoin;
         private ScreenHandler nextScreen;
 
-        public GamePlay GamePlay { get; private set; }
-
         public Map Map { get; private set; }
 
         public HandlerTransfer WinHandler { get; set; }
 
         public HandlerTransfer LoseHandler { get; set; }
 
-        public ScreenHandler CurrentScreen { get; private set; }
-
         public PositionComponent PlayerPos;
+
+        # region IGameplayContainer Members
+
+        public GameEntity Player { get; private set; }
+
+        public IEntityContainer Entities { get { return _currentScreen; } }
+
+        /// <summary>
+        /// This is the first phase of game logic, but comes after the GameLogicTick event.
+        /// During this phase, entities should "think" - decide what they want to do this frame.
+        /// </summary>
+        public event Action GameThink;
+
+        /// <summary>
+        /// During this phase, which comes between GameThink and GameReact, entities should carry out
+        /// the actions decided during the thinking phase. Mainly used for movement.
+        /// </summary>
+        public event Action GameAct;
+
+        /// <summary>
+        /// This is the last logic phase, in which entities should react to the actions of other
+        /// entities on the screen. Primarily used for collision detection and response.
+        /// </summary>
+        public event Action GameReact;
+
+        /// <summary>
+        /// The final phase before rendering. Used to delete entities,
+        /// so please do not enumerate through entity collections during this phase. If you must,
+        /// then make a copy first.
+        /// </summary>
+        public event Action GameCleanup;
+
+        public event GameRenderEventHandler Draw;
 
         public event Action<HandlerTransfer> End;
 
-        public MapHandler(Map map, Dictionary<string, ScreenHandler> screens, GamePlay gamePlay)
+        #endregion
+
+        public MapHandler(Map map)
         {
             Map = map;
             startScreen = Map.StartScreen;
+
             if (string.IsNullOrEmpty(startScreen)) startScreen = Map.Screens.Keys.First();
             startX = Map.PlayerStartX;
             startY = Map.PlayerStartY;
@@ -69,12 +103,15 @@ namespace MegaMan.Engine
 
             map.Tileset.SetTextures(Engine.Instance.GraphicsDevice);
 
-            this.screens = screens;
-
             this.EntityRespawnable = new Dictionary<string, bool[]>();
 
-            this.GamePlay = gamePlay;
-            PlayerPos = gamePlay.Player.GetComponent<PositionComponent>();
+            Player = GameEntity.Get("Player", this);
+            PlayerPos = Player.GetComponent<PositionComponent>();
+        }
+
+        public void InitScreens(Dictionary<string, ScreenHandler> screens)
+        {
+            this.screens = screens;
         }
 
         public void SetTestingStartPosition(string screen, Point startPosition)
@@ -88,7 +125,7 @@ namespace MegaMan.Engine
         {
             if (readyBlinkTime >= 0)
             {
-                if (Engine.Instance.Foreground) 
+                if (Engine.Instance.Foreground)
                 {
                     e.Layers.ForegroundBatch.Draw(
                         readyTexture,
@@ -116,7 +153,7 @@ namespace MegaMan.Engine
         {
             if (music != null) music.Stop();
             Engine.Instance.SoundSystem.StopMusicNsf();
-            if (CurrentScreen.Music != null) CurrentScreen.Music.Stop();
+            if (_currentScreen.Music != null) _currentScreen.Music.Stop();
             
             playerDeadCount = 0;
             updateFunc = DeadUpdate;
@@ -125,29 +162,29 @@ namespace MegaMan.Engine
 
         private void BeginPlay()
         {
-            GamePlay.Player.Start(CurrentScreen);
-            GamePlay.Player.GetComponent<SpriteComponent>().Visible = true;
+            Player.Start();
+            Player.GetComponent<SpriteComponent>().Visible = true;
 
             StateMessage msg = new StateMessage(null, "Teleport");
             PlayerPos.SetPosition(new PointF(startX, 0));
-            GamePlay.Player.SendMessage(msg);
+            Player.SendMessage(msg);
             Action teleport = () => {};
             teleport += () =>
             {
                 if (PlayerPos.Position.Y >= startY)
                 {
                     PlayerPos.SetPosition(new PointF(startX, startY));
-                    GamePlay.Player.SendMessage(new StateMessage(null, "TeleportEnd"));
-                    GamePlay.GameThink -= teleport;
+                    Player.SendMessage(new StateMessage(null, "TeleportEnd"));
+                    GameThink -= teleport;
                     updateFunc = Update;
                 }
             };
-            GamePlay.GameThink += teleport;
+            GameThink += teleport;
         }
 
-        private void Draw(SpriteBatch batch)
+        private void DrawScreen(SpriteBatch batch)
         {
-            CurrentScreen.Draw(batch, PlayerPos.Position);
+            _currentScreen.Draw(batch, PlayerPos.Position);
         }
 
         private void DeadUpdate()
@@ -172,10 +209,10 @@ namespace MegaMan.Engine
             else
             {
                 // enable respawn for on-death-respawn entities
-                foreach (var pair in this.screens)
+                foreach (var pair in this.EntityRespawnable)
                 {
-                    var screen = pair.Value;
-                    var respawns = this.EntityRespawnable[pair.Key];
+                    var screen = this.screens[pair.Key];
+                    var respawns = pair.Value;
                     for (int i = 0; i < screen.Screen.EnemyInfo.Count; i++)
                     {
                         if (screen.Screen.EnemyInfo[i].respawn == RespawnBehavior.Death)
@@ -193,12 +230,12 @@ namespace MegaMan.Engine
         // does not necessary represent the "end" of a scroll operation (boss doors still have to close)
         private void ScrollDone(JoinHandler join)
         {
-            GamePlay.Player.Paused = false;
+            Player.Paused = false;
             join.ScrollDone -= ScrollDone;
             ChangeScreen(nextScreen);
 
             updateFunc = Update;
-            drawFunc = Draw;
+            drawFunc = DrawScreen;
 
             // check for continue points
             if (Map.ContinuePoints.ContainsKey(nextScreen.Screen.Name))
@@ -211,9 +248,9 @@ namespace MegaMan.Engine
 
         private void ChangeScreen(ScreenHandler nextScreen)
         {
-            ScreenHandler oldscreen = CurrentScreen;
-            CurrentScreen = nextScreen;
-            GamePlay.Player.Screen = CurrentScreen;
+            ScreenHandler oldscreen = _currentScreen;
+            _currentScreen = nextScreen;
+
             oldscreen.Clean();
             StartScreen();
 
@@ -230,14 +267,14 @@ namespace MegaMan.Engine
 
         private void Update()
         {
-            CurrentScreen.Update();
+            _currentScreen.Update();
         }
 
         private void OnScrollTriggered(JoinHandler join)
         {
             currentJoin = join;
 
-            GamePlay.Player.Paused = true;
+            Player.Paused = true;
             nextScreen = screens[join.NextScreenName];
             join.BeginScroll(nextScreen, PlayerPos.Position);
 
@@ -251,22 +288,21 @@ namespace MegaMan.Engine
 
         private void DrawJoin(SpriteBatch batch)
         {
-            CurrentScreen.Draw(batch, PlayerPos.Position, 0, 0, currentJoin.OffsetX, currentJoin.OffsetY);
+            _currentScreen.Draw(batch, PlayerPos.Position, 0, 0, currentJoin.OffsetX, currentJoin.OffsetY);
             nextScreen.Draw(batch, PlayerPos.Position, currentJoin.NextScreenX, currentJoin.NextScreenY, currentJoin.NextOffsetX, currentJoin.NextOffsetY);
         }
 
         private void StartScreen()
         {
-            CurrentScreen.JoinTriggered += OnScrollTriggered;
-            CurrentScreen.Teleport += OnTeleport;
-            CurrentScreen.BossDefeated += BossDefeated;
-            CurrentScreen.Start(this);
+            _currentScreen.JoinTriggered += OnScrollTriggered;
+            _currentScreen.Teleport += OnTeleport;
+            _currentScreen.BossDefeated += BossDefeated;
+            _currentScreen.Start(this, Player);
         }
 
         private void BossDefeated()
         {
-            GamePlay.EndPlay();
-            if (End != null && WinHandler != null)
+            if (End != null)
             {
                 End(WinHandler);
             }
@@ -274,9 +310,9 @@ namespace MegaMan.Engine
 
         private void StopScreen()
         {
-            CurrentScreen.JoinTriggered -= OnScrollTriggered;
-            CurrentScreen.Teleport -= OnTeleport;
-            CurrentScreen.Stop();
+            _currentScreen.JoinTriggered -= OnScrollTriggered;
+            _currentScreen.Teleport -= OnTeleport;
+            _currentScreen.Stop();
         }
 
         private bool teleporting = false;
@@ -285,23 +321,23 @@ namespace MegaMan.Engine
             if (teleporting) return;
             teleporting = true;
             Action<string> setpos = (s) => { };
-            if (info.TargetScreen == CurrentScreen.Screen.Name)
+            if (info.TargetScreen == _currentScreen.Screen.Name)
             {
                 setpos = (state) =>
                 {
                     PlayerPos.SetPosition(info.To);
-                    (GamePlay.Player.GetComponent<StateComponent>()).StateChanged -= setpos;
-                    GamePlay.Player.SendMessage(new StateMessage(null, "TeleportEnd"));
+                    (Player.GetComponent<StateComponent>()).StateChanged -= setpos;
+                    Player.SendMessage(new StateMessage(null, "TeleportEnd"));
                     teleporting = false;
-                    (GamePlay.Player.GetComponent<MovementComponent>()).CanMove = true;
+                    (Player.GetComponent<MovementComponent>()).CanMove = true;
                 };
             }
             else
             {
                 setpos = state =>
                 {
-                    (GamePlay.Player.GetComponent<SpriteComponent>()).Visible = false;
-                    (GamePlay.Player.GetComponent<StateComponent>()).StateChanged -= setpos;
+                    (Player.GetComponent<SpriteComponent>()).Visible = false;
+                    (Player.GetComponent<StateComponent>()).StateChanged -= setpos;
                     Engine.Instance.FadeTransition(
                         () => 
                     { 
@@ -310,29 +346,29 @@ namespace MegaMan.Engine
                         PlayerPos.SetPosition(info.To); // do it here so drawing is correct for fade-in
                     }, () =>
                     {
-                        (GamePlay.Player.GetComponent<SpriteComponent>()).Visible = true;
-                        GamePlay.Player.SendMessage(new StateMessage(null, "TeleportEnd"));
-                        (GamePlay.Player.GetComponent<MovementComponent>()).CanMove = true;
+                        (Player.GetComponent<SpriteComponent>()).Visible = true;
+                        Player.SendMessage(new StateMessage(null, "TeleportEnd"));
+                        (Player.GetComponent<MovementComponent>()).CanMove = true;
                         teleporting = false;
                     });
                 };
             }
-            (GamePlay.Player.GetComponent<MovementComponent>()).CanMove = false;
-            GamePlay.Player.SendMessage(new StateMessage(null, "TeleportBlink"));
-            (GamePlay.Player.GetComponent<StateComponent>()).StateChanged += setpos;
+            (Player.GetComponent<MovementComponent>()).CanMove = false;
+            Player.SendMessage(new StateMessage(null, "TeleportBlink"));
+            (Player.GetComponent<StateComponent>()).StateChanged += setpos;
         }
 
         #region IHandleGameEvents Members
 
         public void StartHandler()
         {
-            GamePlay.Player.Death += Player_Death;
+            Player.Death += Player_Death;
 
-            PlayerPos = GamePlay.Player.GetComponent<PositionComponent>();
+            PlayerPos = Player.GetComponent<PositionComponent>();
             PlayerPos.SetPosition(new PointF(startX, 0));
 
             if (!Map.Screens.ContainsKey(startScreen)) throw new GameRunException("The start screen for \""+Map.Name+"\" is supposed to be \""+startScreen+"\", but it doesn't exist!");
-            CurrentScreen = screens[startScreen];
+            _currentScreen = screens[startScreen];
             StartScreen();
 
             Engine.Instance.SoundSystem.StopMusicNsf();
@@ -341,7 +377,7 @@ namespace MegaMan.Engine
             if (Map.MusicNsfTrack != 0) Engine.Instance.SoundSystem.PlayMusicNSF((uint)Map.MusicNsfTrack);
 
             // updateFunc isn't set until BeginPlay
-            drawFunc = Draw;
+            drawFunc = DrawScreen;
 
             ResumeHandler();
             StartDrawing();
@@ -351,20 +387,20 @@ namespace MegaMan.Engine
             readyBlinks = 0;
             Engine.Instance.GameRender += BlinkReady;
 
-            GamePlay.Player.GetComponent<SpriteComponent>().Visible = false;
+            Player.GetComponent<SpriteComponent>().Visible = false;
 
             // make sure we can move
-            (GamePlay.Player.GetComponent<InputComponent>()).Paused = false;
+            (Player.GetComponent<InputComponent>()).Paused = false;
         }
 
         public void StopHandler()
         {
-            GamePlay.Player.Death -= Player_Death;
+            Player.Death -= Player_Death;
 
-            if (CurrentScreen != null)
+            if (_currentScreen != null)
             {
                 StopScreen();
-                CurrentScreen.Clean();
+                _currentScreen.Clean();
             }
 
             if (music != null) music.Stop();
@@ -376,31 +412,34 @@ namespace MegaMan.Engine
             Engine.Instance.GameRender -= BlinkReady;
         }
 
-        private bool running;
+        private int pauseCount = 1; // starts paused
 
         public void PauseHandler()
         {
-            if (!running) return;
-            GamePlay.PauseHandler();
-            GamePlay.Player.Paused = true;
+            if (pauseCount == 0)
+            {
+                Player.Paused = true;
 
-            Engine.Instance.GameLogicTick -= GameTick;
-            Engine.Instance.GameInputReceived -= GameInputReceived;
-            
-            running = false;
+                Engine.Instance.GameLogicTick -= GameTick;
+                Engine.Instance.GameInputReceived -= GameInputReceived;
+            }
+
+            pauseCount++;
         }
 
         public void ResumeHandler()
         {
-            if (running) return;
-            Engine.Instance.GameLogicTick += GameTick;
-            Engine.Instance.GameInputReceived += GameInputReceived;
+            if (pauseCount == 0) return;
 
-            GamePlay.ResumeHandler();
-            GamePlay.Player.Paused = false;
+            pauseCount--;
 
-            Game.CurrentGame.Unpause();
-            running = true;
+            if (pauseCount == 0)
+            {
+                Engine.Instance.GameLogicTick += GameTick;
+                Engine.Instance.GameInputReceived += GameInputReceived;
+
+                Player.Paused = false;
+            }
         }
 
         public void StopDrawing()
@@ -415,7 +454,7 @@ namespace MegaMan.Engine
 
         private void GameInputReceived(GameInputEventArgs e)
         {
-            if (updateFunc == null || (GamePlay.Player.GetComponent<InputComponent>()).Paused) return;
+            if (updateFunc == null || (Player.GetComponent<InputComponent>()).Paused) return;
 
             /* This might be useful even though pause screens are replaced
             if (e.Input == GameInput.Start && e.Pressed)
@@ -440,11 +479,18 @@ namespace MegaMan.Engine
             {
                 t.Sprite.Update();
             }
+
+            if (GameThink != null) GameThink();
+            if (GameAct != null) GameAct();
+            if (GameReact != null) GameReact();
+            if (GameCleanup != null) GameCleanup();
         }
 
         public void GameRender(GameRenderEventArgs e)
         {
             if (drawFunc != null && Engine.Instance.Background) drawFunc(e.Layers.BackgroundBatch);
+
+            if (Draw != null) Draw(e);
         }
 
         #endregion

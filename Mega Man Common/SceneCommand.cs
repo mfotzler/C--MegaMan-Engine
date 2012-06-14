@@ -20,7 +20,8 @@ namespace MegaMan.Common
         Option,
         Sound,
         Next,
-        Call
+        Call,
+        Effect
     }
 
     public abstract class SceneCommandInfo
@@ -84,6 +85,10 @@ namespace MegaMan.Common
 
                     case "Call":
                         list.Add(SceneCallCommandInfo.FromXml(cmdNode));
+                        break;
+
+                    case "Effect":
+                        list.Add(SceneEffectCommandInfo.FromXml(cmdNode));
                         break;
                 }
             }
@@ -205,6 +210,7 @@ namespace MegaMan.Common
         public int? Speed { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
+        public string Font { get; set; }
 
         public static SceneTextCommandInfo FromXml(XElement node)
         {
@@ -222,12 +228,19 @@ namespace MegaMan.Common
             info.Y = node.GetInteger("y");
             var bindingNode = node.Element("Binding");
             if (bindingNode != null) info.Binding = SceneBindingInfo.FromXml(bindingNode);
+
+            var fontAttr = node.Attribute("font");
+            if (fontAttr != null)
+            {
+                info.Font = fontAttr.Value;
+            }
             return info;
         }
 
         public override void Save(XmlTextWriter writer)
         {
             writer.WriteStartElement("Text");
+            if (!string.IsNullOrEmpty("Font")) writer.WriteAttributeString("font", Font);
             if (!string.IsNullOrEmpty(Name)) writer.WriteAttributeString("name", Name);
             writer.WriteAttributeString("content", Content);
             if (Speed != null) writer.WriteAttributeString("speed", Speed.Value.ToString());
@@ -493,6 +506,34 @@ namespace MegaMan.Common
             writer.WriteStartElement("Call");
             writer.WriteValue(this.Name);
             writer.WriteEndElement();
+        }
+    }
+
+    public class SceneEffectCommandInfo : SceneCommandInfo
+    {
+        public string GeneratedName { get; private set; }
+        public string EntityName { get; private set; }
+        public XElement EffectNode { get; private set; }
+
+        public static SceneEffectCommandInfo FromXml(XElement node)
+        {
+            var info = new SceneEffectCommandInfo();
+
+            info.GeneratedName = Guid.NewGuid().ToString();
+            info.EntityName = node.RequireAttribute("entity").Value;
+            info.EffectNode = node;
+
+            return info;
+        }
+
+        public override SceneCommands Type
+        {
+            get { return SceneCommands.Effect; }
+        }
+
+        public override void Save(XmlTextWriter writer)
+        {
+            throw new NotImplementedException();
         }
     }
 

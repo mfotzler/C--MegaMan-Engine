@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Drawing;
 using System.Xml.Linq;
 using MegaMan.Common;
@@ -151,13 +152,13 @@ namespace MegaMan.Engine
             {
                 if (overTile != null && nextOverTile != null && nextOverTile.Properties.Name != overTile.Properties.Name)
                 {
-                    if (overTile.Properties.OnLeave != null) EffectParser.GetEffect(overTile.Properties.OnLeave)(Parent);
-                    if (nextOverTile.Properties.OnEnter != null) EffectParser.GetEffect(nextOverTile.Properties.OnEnter)(Parent);
+                    if (overTile.Properties.OnLeave != null) EffectParser.GetLateBoundEffect(overTile.Properties.OnLeave)(Parent);
+                    if (nextOverTile.Properties.OnEnter != null) EffectParser.GetLateBoundEffect(nextOverTile.Properties.OnEnter)(Parent);
                 }
 
                 if (nextOverTile != null && nextOverTile.Properties.OnOver != null)
                 {
-                    EffectParser.GetEffect(nextOverTile.Properties.OnOver)(Parent);
+                    EffectParser.GetLateBoundEffect(nextOverTile.Properties.OnOver)(Parent);
                 }
             }
 
@@ -410,7 +411,7 @@ namespace MegaMan.Engine
                             PositionComponent pos = entity.GetComponent<PositionComponent>();
                             if (mov == null || pos == null) return;
 
-                            GameEntity player = entity.Container.Player;
+                            GameEntity player = entity.Screen.GetEntities("Player").Single();
                             PositionComponent playerPos = player.GetComponent<PositionComponent>();
 
                             if (axis == Axis.X)

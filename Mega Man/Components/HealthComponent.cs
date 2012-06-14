@@ -1,5 +1,6 @@
 ﻿using System.Xml.Linq;
 using MegaMan.Common;
+using System;
 
 namespace MegaMan.Engine
 {
@@ -22,12 +23,19 @@ namespace MegaMan.Engine
                 {
                     meter.Value = health;
                 }
+
+                if (HealthChanged != null)
+                {
+                    HealthChanged(health, maxHealth);
+                }
             }
         }
         public float MaxHealth { get { return maxHealth; } }
         public bool Hit { get; private set; }
 
-        void Instance_GameCleanup()
+        public event Action<float, float> HealthChanged;
+
+        private void Instance_GameCleanup()
         {
             if (health <= 0) Parent.Die();
         }
@@ -56,7 +64,7 @@ namespace MegaMan.Engine
             Health = MaxHealth;
             if (meter != null)
             {
-                meter.StartHandler();
+                meter.Start(Parent.Container);
             }
         }
 
@@ -71,7 +79,7 @@ namespace MegaMan.Engine
             Parent.Container.GameCleanup -= Instance_GameCleanup;
             if (meter != null)
             {
-                meter.StopHandler();
+                meter.Stop();
             }
             Hit = false;
             flashing = 0;
@@ -81,7 +89,7 @@ namespace MegaMan.Engine
         {
             if (msg is DamageMessage && flashing == 0)
             {
-                if (Engine.Instance.Invincible && Parent == Parent.Container.Player) return;
+                if (Engine.Instance.Invincible && Parent.Name == "Player") return;
 
                 DamageMessage damage = (DamageMessage)msg;
 
@@ -127,7 +135,7 @@ namespace MegaMan.Engine
             XElement meterNode = xml.Element("Meter");
             if (meterNode != null)
             {
-                meter = HealthMeter.Create(meterNode, true, Parent.Container);
+                meter = HealthMeter.Create(meterNode, true);
                 meter.MaxValue = maxHealth;
                 meter.IsPlayer = (Parent.Name == "Player");
             }

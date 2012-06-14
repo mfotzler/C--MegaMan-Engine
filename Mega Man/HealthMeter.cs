@@ -49,7 +49,7 @@ namespace MegaMan.Engine
         {
             foreach (var meter in allMeters)
             {
-                meter.StopHandler();
+                meter.Stop();
             }
 
             allMeters.Clear();
@@ -76,6 +76,7 @@ namespace MegaMan.Engine
                     if (!animating)
                     {
                         Engine.Instance.GameLogicTick += GameTick;
+                        if (IsPlayer) container.PauseHandler();
                         animating = true;
                         if (sound != null) Engine.Instance.SoundSystem.PlaySfx(sound);
                     }
@@ -91,7 +92,7 @@ namespace MegaMan.Engine
         void UpTick()
         {
             tickframes++;
-            if (tickframes > 1 && IsPlayer) Game.CurrentGame.Pause();
+            
             if (tickframes >= 3)
             {
                 tickframes = 0;
@@ -109,27 +110,26 @@ namespace MegaMan.Engine
             }
         }
 
-        public static HealthMeter Create(MeterInfo info, bool inGamePlay, IGameplayContainer container)
+        public static HealthMeter Create(MeterInfo info, bool inGamePlay)
         {
-            var meter = new HealthMeter(container);
+            var meter = new HealthMeter();
             meter.LoadInfo(info);
             meter.inGamePlay = inGamePlay;
             if (inGamePlay) allMeters.Add(meter);
             return meter;
         }
 
-        public static HealthMeter Create(XElement node, bool inGamePlay, IGameplayContainer container)
+        public static HealthMeter Create(XElement node, bool inGamePlay)
         {
-            var meter = new HealthMeter(container);
+            var meter = new HealthMeter();
             meter.LoadXml(node);
             meter.inGamePlay = inGamePlay;
             if (inGamePlay) allMeters.Add(meter);
             return meter;
         }
 
-        private HealthMeter(IGameplayContainer container)
+        private HealthMeter()
         {
-            this.container = container;
             value = maxvalue;
             running = false;
         }
@@ -159,7 +159,8 @@ namespace MegaMan.Engine
 
             if (info.Binding != null)
             {
-                this.binding = Binding.Create(info.Binding, this, container);
+                this.binding = Binding.Create(info.Binding, this);
+                MaxValue = 1; // use 0 - 1 range for values
             }
 
             if (tickTexture != null) tickTexture.Dispose();
@@ -252,18 +253,24 @@ namespace MegaMan.Engine
             }
         }
 
-        public void StartHandler()
+        public void Start(IGameplayContainer container)
         {
+            if (container == null)
+            {
+                throw new ArgumentNullException("container");
+            }
+            this.container = container;
+
             if (this.binding != null)
             {
-                this.binding.Start();
+                this.binding.Start(container.Entities);
             }
 
-            Engine.Instance.GameRender += GameRender;
+            container.Draw += GameRender;
             running = true;
         }
 
-        public void StopHandler()
+        public void Stop()
         {
             if (this.binding != null)
             {
@@ -271,7 +278,10 @@ namespace MegaMan.Engine
             }
 
             Engine.Instance.GameLogicTick -= GameTick;
-            Engine.Instance.GameRender -= GameRender;
+            if (container != null)
+            {
+                container.Draw -= GameRender;
+            }
             running = false;
         }
 
@@ -282,7 +292,7 @@ namespace MegaMan.Engine
             {
                 Engine.Instance.GameLogicTick -= GameTick;
                 animating = false;
-                if (IsPlayer) Game.CurrentGame.Unpause();
+                if (IsPlayer) container.ResumeHandler();
                 if (sound != null) Engine.Instance.SoundSystem.StopSfx(sound);
             }
         }

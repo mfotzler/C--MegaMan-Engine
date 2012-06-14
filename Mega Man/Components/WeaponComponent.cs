@@ -17,57 +17,50 @@ namespace MegaMan.Engine
             public int Max;
             public int Usage;
             public HealthMeter Meter;
-            public string SpriteGroup;
+            public int? Palette;
         }
 
         private List<WeaponInfo> weapons = new List<WeaponInfo>();
         private int current;
 
-        public event Action<string, int> AmmoChanged;
+        public event Action<string, int, int> AmmoChanged;
 
         public string CurrentWeapon { get { return weapons[current].Name; } }
 
         public int Ammo(string weapon)
         {
-            foreach (WeaponInfo info in weapons)
+            var info = weapons.SingleOrDefault(w => w.Name == weapon);
+            if (info != null)
             {
-                if (info.Name == weapon)
-                {
-                    if (info.SpriteGroup == "Default") return (int)(Parent.GetComponent<HealthComponent>()).Health;
-                    return info.Ammo;
-                }
+                if (info.Palette == 0) return (int)(Parent.GetComponent<HealthComponent>()).Health;
+                return info.Ammo;
             }
             return 0;
         }
 
         public int MaxAmmo(string weapon)
         {
-            foreach (WeaponInfo info in weapons)
+            var info = weapons.SingleOrDefault(w => w.Name == weapon);
+            if (info != null)
             {
-                if (info.Name == weapon)
-                {
-                    if (info.SpriteGroup == "Default") return (int)(Parent.GetComponent<HealthComponent>()).MaxHealth;
-                    return info.Max;
-                }
+                if (info.Palette == 0) return (int)(Parent.GetComponent<HealthComponent>()).MaxHealth;
+                return info.Max;
             }
             return 0;
         }
 
-        public void SetWeapon(string entityName)
+        public void SetWeapon(string name)
         {
-            foreach (WeaponInfo info in weapons)
+            var weapon = weapons.SingleOrDefault(w => w.Name == name);
+            if (weapon != null)
             {
-                if (info.Name == entityName)
+                if (weapons[current].Meter != null)
                 {
-                    if (weapons[current].Meter != null)
-                    {
-                        weapons[current].Meter.StopHandler();
-                    }
-
-                    current = info.Index;
-                    ApplyCurrent();
-                    return;
+                    weapons[current].Meter.Stop();
                 }
+
+                current = weapon.Index;
+                ApplyCurrent();
             }
         }
 
@@ -106,7 +99,7 @@ namespace MegaMan.Engine
         {
             if (weapons[current].Meter != null)
             {
-                weapons[current].Meter.StopHandler();
+                weapons[current].Meter.Stop();
             }
 
             current++;
@@ -119,7 +112,7 @@ namespace MegaMan.Engine
         {
             if (weapons[current].Meter != null)
             {
-                weapons[current].Meter.StopHandler();
+                weapons[current].Meter.Stop();
             }
 
             current--;
@@ -130,12 +123,18 @@ namespace MegaMan.Engine
 
         private void ApplyCurrent()
         {
-            SpriteComponent sprites = Parent.GetComponent<SpriteComponent>();
-            if (sprites != null) sprites.ChangeGroup(weapons[current].SpriteGroup);
+            if (weapons[current].Palette.HasValue)
+            {
+                SpriteComponent sprites = Parent.GetComponent<SpriteComponent>();
+                if (sprites != null)
+                {
+                    sprites.ChangePalette(weapons[current].Palette.Value);
+                }
+            }
 
             if (weapons[current].Meter != null)
             {
-                weapons[current].Meter.StartHandler();
+                weapons[current].Meter.Start(Parent.Container);
             }
         }
 
@@ -164,11 +163,11 @@ namespace MegaMan.Engine
 
             if (AmmoChanged != null)
             {
-                AmmoChanged(weapons[current].Name, weapons[current].Ammo);
+                AmmoChanged(weapons[current].Name, weapons[current].Ammo, weapons[current].Max);
             }
         }
 
-        public void AddWeapon(string name, string entity, int ammo, int usage, HealthMeter meter, string spritegroup)
+        public void AddWeapon(string name, string entity, int ammo, int usage, HealthMeter meter, int? palette)
         {
             if (weapons.Any(info => info.Name == name))
             {
@@ -182,7 +181,7 @@ namespace MegaMan.Engine
                 Max = ammo,
                 Usage = usage,
                 Meter = meter,
-                SpriteGroup = spritegroup,
+                Palette = palette,
                 Index = weapons.Count
             };
 
@@ -203,21 +202,24 @@ namespace MegaMan.Engine
                 int usage;
                 if (!weapon.TryInteger("usage", out usage)) usage = 1;
 
-                string spritegroup = "Default";
-                XAttribute sprite = weapon.Attribute("pallete");
-                if (sprite != null) spritegroup = sprite.Value;
+                int? palette = null;
+                int p = 0;
+                if (weapon.TryInteger("palette", out p))
+                {
+                    palette = p;
+                }
 
                 HealthMeter meter = null;
                 XElement meterNode = weapon.Element("Meter");
                 if (meterNode != null)
                 {
-                    meter = HealthMeter.Create(meterNode, true, Parent.Container);
+                    meter = HealthMeter.Create(meterNode, true);
 
                     meter.MaxValue = ammo;
                     meter.Reset();
                 }
 
-                AddWeapon(name, entity, ammo, usage, meter, spritegroup);
+                AddWeapon(name, entity, ammo, usage, meter, palette);
             }
         }
 
@@ -245,11 +247,22 @@ namespace MegaMan.Engine
                 XElement ammoNode = node.Element("Ammo");
                 if (ammoNode != null)
                 {
-                    int val = int.Parse(ammoNode.RequireAttribute("val").Value);
+                    int val = ammoNode.GetInteger("val");
                     effect = entity =>
                     {
                         WeaponComponent weaponComponent = entity.GetComponent<WeaponComponent>();
                         if (weaponComponent != null) weaponComponent.AddAmmo(val);
+                    };
+                }
+
+                XElement changeNode = node.Element("Change");
+                if (changeNode != null)
+                {
+                    var weaponName = changeNode.RequireAttribute("name").Value;
+                    effect = entity =>
+                    {
+                        WeaponComponent weaponComponent = entity.GetComponent<WeaponComponent>();
+                        if (weaponComponent != null) weaponComponent.SetWeapon(weaponName);
                     };
                 }
             }

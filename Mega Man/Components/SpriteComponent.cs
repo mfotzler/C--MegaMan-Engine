@@ -38,7 +38,7 @@ namespace MegaMan.Engine
             get { return currentSpriteName; }
         }
 
-        public string Palette
+        public string Group
         {
             get { return currentPalette; }
         }
@@ -79,13 +79,13 @@ namespace MegaMan.Engine
         public override void Start()
         {
             Parent.Container.GameThink += Update;
-            Engine.Instance.GameRender += Instance_GameRender;
+            Parent.Container.Draw += Instance_GameRender;
         }
 
         public override void Stop()
         {
             Parent.Container.GameThink -= Update;
-            Engine.Instance.GameRender -= Instance_GameRender;
+            Parent.Container.Draw -= Instance_GameRender;
         }
 
         public override void Message(IGameMessage msg)
@@ -162,6 +162,19 @@ namespace MegaMan.Engine
                             spritecomp.ChangeGroup(group);
                         };
                         break;
+
+                    case "Palette":
+                        string pal = prop.RequireAttribute("name").Value;
+                        int index = prop.GetInteger("index");
+                        action += entity =>
+                        {
+                            var palette = Palette.Get(pal);
+                            if (palette != null)
+                            {
+                                palette.CurrentIndex = index;
+                            }
+                        };
+                        break;
                 }
             }
             return action;
@@ -193,6 +206,16 @@ namespace MegaMan.Engine
                 currentSpriteName = name;
                 currentSprite = sprite;
                 currentSprite.Play();
+            }
+        }
+
+        public void ChangePalette(int index)
+        {
+            var paletteName = currentSprite.PaletteName;
+            var palette = Palette.Get(paletteName);
+            if (palette != null)
+            {
+                palette.CurrentIndex = index;
             }
         }
 
