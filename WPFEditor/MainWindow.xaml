@@ -3,24 +3,61 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Mega Man Level Editor" Height="776" Width="1107">
     <Grid>
-        <Menu>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0">
             <MenuItem Header="_File">
-                <MenuItem Header="_New" Command="New"></MenuItem>
-                <MenuItem Header="_Open" Command="Open"></MenuItem>
+                <MenuItem Header="_New" Command="New">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/NewDocumentHS.png"></Image>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="_Open" Command="Open">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/openHS.png"></Image>
+                    </MenuItem.Icon>
+                </MenuItem>
                 <MenuItem Header="_Recent"></MenuItem>
                 <Separator />
-                <MenuItem Header="_Save" Command="Save"></MenuItem>
+                <MenuItem Header="_Save" Command="Save">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/saveHS.png"></Image>
+                    </MenuItem.Icon>
+                </MenuItem>
                 <Separator />
                 <MenuItem Header="_Close" Command="Close"></MenuItem>
                 <MenuItem Header="_Quit"></MenuItem>
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Header="Undo" Command="Undo"></MenuItem>
-                <MenuItem Header="Redo" Command="Redo"></MenuItem>
+                <MenuItem Header="Undo" Command="Undo">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/Undo.png"></Image>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Redo" Command="Redo">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/Redo.png"></Image>
+                    </MenuItem.Icon>
+                </MenuItem>
                 <Separator />
-                <MenuItem Header="Copy" Command="Copy"></MenuItem>
-                <MenuItem Header="Paste" Command="Paste"></MenuItem>
-                <MenuItem Header="Paste as Brush"></MenuItem>
+                <MenuItem Header="Copy" Command="Copy">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/CopyHS.png"></Image>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="Paste" Command="Paste">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/PasteHS.png"></Image>
+                    </MenuItem.Icon>
+                    
+                </MenuItem>
+                <MenuItem Header="Paste as Brush">
+                    <MenuItem.Icon>
+                        <Image Source="/Resources/PasteBrush.png"></Image>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="Tiles"></MenuItem>
@@ -54,6 +91,61 @@
                 <MenuItem Header="Set Engine Path"></MenuItem>
             </MenuItem>
         </Menu>
-
+        
+        <TabControl Grid.Row="1">
+            <TabControl.Resources>
+                <Style TargetType="TabPanel">
+                    <Setter Property="HorizontalAlignment" Value="Right" />
+                </Style>
+                <Style TargetType="TabControl">
+                    <Setter Property="BorderThickness" Value="0,0,0,0"></Setter>
+                </Style>
+                <Style TargetType="TabItem">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="TabItem">
+                                <Grid>
+                                   <Border Name="Border"
+                                           Background="Transparent"
+                                           BorderBrush="Black"
+                                           BorderThickness="0,0,0,0" />
+                                   <ContentPresenter x:Name="ContentSite"
+                                                     VerticalAlignment="Center"
+                                                     HorizontalAlignment="Center"
+                                                     ContentSource="Header"
+                                                     Margin="30,10,30,10" />
+                                </Grid> 
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter Property="Foreground" Value="DarkGoldenrod"></Setter>
+                                    </Trigger>    
+                                    <Trigger Property="IsSelected" Value="False">
+                                        <Setter Property="Foreground" Value="Black"></Setter>
+                                    </Trigger>    
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Setter Property="FontSize" Value="18"></Setter>
+                    <Setter Property="FontFamily" Value="Megaman 2"></Setter>
+                </Style>
+            </TabControl.Resources>
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock>Layout</TextBlock>
+                </TabItem.Header>
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock>Tiling</TextBlock>
+                </TabItem.Header>
+                <TextBlock>HI</TextBlock>
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <TextBlock>Entities</TextBlock>
+                </TabItem.Header>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
