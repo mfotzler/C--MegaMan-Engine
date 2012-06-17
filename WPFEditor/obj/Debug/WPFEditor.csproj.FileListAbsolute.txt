@@ -11,3 +11,8 @@ C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\obj\Debug\WPFEditor.Properties.Resou
 C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\obj\Debug\WPFEditor.csproj.GenerateResource.Cache
 C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\obj\Debug\WPFEditor.exe
 C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\obj\Debug\WPFEditor.pdb
+C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\bin\Debug\Mega Man Common.dll
+C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\bin\Debug\Mega Man Common.pdb
+C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\bin\Debug\MegaManLevelEditor.exe
+C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\bin\Debug\WeifenLuo.WinFormsUI.Docking.dll
+C:\Users\mafcho\C--MegaMan-Engine\WPFEditor\bin\Debug\MegaManLevelEditor.pdb

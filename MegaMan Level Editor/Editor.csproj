@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MegaMan.LevelEditor</RootNamespace>
-    <AssemblyName>MegaMan Level Editor</AssemblyName>
+    <AssemblyName>MegaManLevelEditor</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>

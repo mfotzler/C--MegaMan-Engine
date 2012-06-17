@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using MegaMan.LevelEditor;
 
 namespace WPFEditor
 {
@@ -22,6 +23,10 @@ namespace WPFEditor
     {
         public MainWindow()
         {
+            var projectEditor = ProjectEditor.CreateNew(@"C:\Users\mafcho\C--MegaMan-Engine\Demo Project");
+            var stageDocument = new StageDocument(projectEditor);
+            Resources.Add("stageDocument", stageDocument);
+            
             InitializeComponent();
         }
     }

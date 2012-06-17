@@ -11,7 +11,7 @@ using MegaMan.Common;
 
 namespace MegaMan.LevelEditor
 {
-    public partial class StageForm : WeifenLuo.WinFormsUI.Docking.DockContent
+    public partial class StageForm : Form
     {
         private StageDocument stage;
 
@@ -102,6 +102,27 @@ namespace MegaMan.LevelEditor
             AutoScrollPosition = new Point(
                 (int)(cx * (HorizontalScroll.Maximum - HorizontalScroll.LargeChange)),
                 (int)(cy * (VerticalScroll.Maximum - VerticalScroll.LargeChange)));
+        }
+
+        public StageForm()
+        {
+            var projectEditor = ProjectEditor.FromFile(@"C:\Users\mafcho\C--MegaMan-Engine\Demo Project\game.xml");
+            var stage = new StageDocument(projectEditor, @"C:\Users\mafcho\C--MegaMan-Engine\Demo Project\stages\crystal", @"C:\Users\mafcho\C--MegaMan-Engine\Demo Project\stages\crystal");
+
+            InitializeComponent();
+
+            joinOverlay = new JoinOverlay();
+            joinOverlay.Owner = this;
+
+            this.SetBackgroundGrid();
+
+            history = new History();
+            surfaces = new Dictionary<String, ScreenDrawingSurface>();
+            surfaceLocations = new Dictionary<string, Point>();
+
+            SetStage(stage);
+
+            this.TopLevel = false;
         }
 
         public StageForm(StageDocument stage)
@@ -261,7 +282,7 @@ namespace MegaMan.LevelEditor
             }
 
             joinOverlay.Refresh(maxX + 20, maxY + 20, stage.Joins, surfaces);
-            joinOverlay.Visible = MainForm.Instance.DrawJoins;
+            joinOverlay.Visible = MainForm.Instance == null || MainForm.Instance.DrawJoins;
 
             this.HorizontalScroll.Value = oldHorizScroll;
             this.VerticalScroll.Value = oldVertScroll;

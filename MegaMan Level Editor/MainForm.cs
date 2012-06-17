@@ -234,7 +234,7 @@ namespace MegaMan.LevelEditor
 
         public void ShowStageForm(StageForm form)
         {
-            form.DockAreas = DockAreas.Document;
+            //form.DockAreas = DockAreas.Document;
             form.Show(dockPanel1);
         }
 

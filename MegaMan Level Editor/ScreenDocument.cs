@@ -143,7 +143,7 @@ namespace MegaMan.LevelEditor
                 bounds.Offset(-entity.MainSprite.HotSpot.X, -entity.MainSprite.HotSpot.Y);
             }
 
-            bounds.Offset(entityInfo.screenX, entityInfo.screenY);
+            bounds.Offset((float)entityInfo.screenX, (float)entityInfo.screenY);
             return bounds.Contains(location);
         }
 
@@ -162,20 +162,20 @@ namespace MegaMan.LevelEditor
 
                 if (sprite != null)
                 {
-                    sprite.Draw(graphics, info.screenX, info.screenY);
+                    sprite.Draw(graphics, (float)info.screenX, (float)info.screenY);
 
                     if (selectedEntityIndex == i)
                     {
-                        graphics.DrawRectangle(Pens.LimeGreen, info.screenX - sprite.HotSpot.X, info.screenY - sprite.HotSpot.Y, sprite.Width, sprite.Height);
+                        graphics.DrawRectangle(Pens.LimeGreen, (float)info.screenX - sprite.HotSpot.X, (float)info.screenY - sprite.HotSpot.Y, sprite.Width, sprite.Height);
                     }
                 }
                 else
                 {
-                    graphics.DrawImage(Properties.Resources.nosprite, info.screenX - 8, info.screenY - 8);
+                    graphics.DrawImage(Properties.Resources.nosprite, (float)info.screenX - 8, (float)info.screenY - 8);
 
                     if (selectedEntityIndex == i)
                     {
-                        graphics.DrawRectangle(Pens.LimeGreen, info.screenX - 8, info.screenY - 8, 16, 16);
+                        graphics.DrawRectangle(Pens.LimeGreen, (float)info.screenX - 8, (float)info.screenY - 8, 16, 16);
                     }
                 }
             }

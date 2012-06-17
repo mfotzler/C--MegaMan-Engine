@@ -1,6 +1,8 @@
-﻿<Window x:Class="WPFEditor.MainWindow"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="WPFEditor.MainWindow"
+        xmlns:editor="clr-namespace:MegaMan.LevelEditor;assembly=MegaManLevelEditor"
         Title="Mega Man Level Editor" Height="776" Width="1107">
     <Grid>
         <Grid.RowDefinitions>
@@ -11,139 +13,139 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Command="New">
                     <MenuItem.Icon>
-                        <Image Source="/Resources/NewDocumentHS.png"></Image>
+                        <Image Source="/Resources/NewDocumentHS.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="_Open" Command="Open">
                     <MenuItem.Icon>
-                        <Image Source="/Resources/openHS.png"></Image>
+                        <Image Source="/Resources/openHS.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="_Recent"></MenuItem>
+                <MenuItem Header="_Recent"/>
                 <Separator />
                 <MenuItem Header="_Save" Command="Save">
                     <MenuItem.Icon>
-                        <Image Source="/Resources/saveHS.png"></Image>
+                        <Image Source="/Resources/saveHS.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
-                <MenuItem Header="_Close" Command="Close"></MenuItem>
-                <MenuItem Header="_Quit"></MenuItem>
+                <MenuItem Header="_Close" Command="Close"/>
+                <MenuItem Header="_Quit"/>
             </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="Undo" Command="Undo">
                     <MenuItem.Icon>
-                        <Image Source="/Resources/Undo.png"></Image>
+                        <Image Source="/Resources/Undo.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Redo" Command="Redo">
                     <MenuItem.Icon>
-                        <Image Source="/Resources/Redo.png"></Image>
+                        <Image Source="/Resources/Redo.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
                 <MenuItem Header="Copy" Command="Copy">
                     <MenuItem.Icon>
-                        <Image Source="/Resources/CopyHS.png"></Image>
+                        <Image Source="/Resources/CopyHS.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="Paste" Command="Paste">
                     <MenuItem.Icon>
-                        <Image Source="/Resources/PasteHS.png"></Image>
+                        <Image Source="/Resources/PasteHS.png"/>
                     </MenuItem.Icon>
                     
                 </MenuItem>
                 <MenuItem Header="Paste as Brush">
                     <MenuItem.Icon>
-                        <Image Source="/Resources/PasteBrush.png"></Image>
+                        <Image Source="/Resources/PasteBrush.png"/>
                     </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem Header="Tiles"></MenuItem>
-                <MenuItem Header="Blocking"></MenuItem>
-                <MenuItem Header="Entities"></MenuItem>
-                <MenuItem Header="Grid"></MenuItem>
-                <MenuItem Header="Animate"></MenuItem>
-                <MenuItem Header="Joins"></MenuItem>
+                <MenuItem Header="Tiles"/>
+                <MenuItem Header="Blocking"/>
+                <MenuItem Header="Entities"/>
+                <MenuItem Header="Grid"/>
+                <MenuItem Header="Animate"/>
+                <MenuItem Header="Joins"/>
             </MenuItem>
             <MenuItem Header="_Stage">
-                <MenuItem Header="New Stage"></MenuItem>
-                <MenuItem Header="Properties"></MenuItem>
-                <MenuItem Header="Stage Select..."></MenuItem>
+                <MenuItem Header="New Stage"/>
+                <MenuItem Header="Properties"/>
+                <MenuItem Header="Stage Select..."/>
             </MenuItem>
             <MenuItem Header="_Screen">
-                <MenuItem Header="Split Screen"></MenuItem>
-                <MenuItem Header="Merge Screen"></MenuItem>
+                <MenuItem Header="Split Screen"/>
+                <MenuItem Header="Merge Screen"/>
                 <Separator />
-                <MenuItem Header="Clear Screen"></MenuItem>
+                <MenuItem Header="Clear Screen"/>
             </MenuItem>
             <MenuItem Header="_Windows">
-                <MenuItem Header="Brushes"></MenuItem>
-                <MenuItem Header="Project"></MenuItem>
-                <MenuItem Header="History"></MenuItem>
-                <MenuItem Header="Entities"></MenuItem>
+                <MenuItem Header="Brushes"/>
+                <MenuItem Header="Project"/>
+                <MenuItem Header="History"/>
+                <MenuItem Header="Entities"/>
             </MenuItem>
             <MenuItem Header="_Test">
-                <MenuItem Header="Run Project"></MenuItem>
-                <MenuItem Header="Run Stage"></MenuItem>
+                <MenuItem Header="Run Project"/>
+                <MenuItem Header="Run Stage"/>
                 <Separator />
-                <MenuItem Header="Set Engine Path"></MenuItem>
+                <MenuItem Header="Set Engine Path"/>
             </MenuItem>
         </Menu>
         
         <TabControl Grid.Row="1">
             <TabControl.Resources>
-                <Style TargetType="TabPanel">
+                <Style TargetType="{x:Type TabPanel}">
                     <Setter Property="HorizontalAlignment" Value="Right" />
                 </Style>
-                <Style TargetType="TabControl">
-                    <Setter Property="BorderThickness" Value="0,0,0,0"></Setter>
-                </Style>
-                <Style TargetType="TabItem">
+                <Style TargetType="{x:Type TabItem}">
                     <Setter Property="Template">
                         <Setter.Value>
-                            <ControlTemplate TargetType="TabItem">
-                                <Grid>
-                                   <Border Name="Border"
-                                           Background="Transparent"
-                                           BorderBrush="Black"
-                                           BorderThickness="0,0,0,0" />
+                            <ControlTemplate TargetType="{x:Type TabItem}">
                                    <ContentPresenter x:Name="ContentSite"
                                                      VerticalAlignment="Center"
                                                      HorizontalAlignment="Center"
                                                      ContentSource="Header"
-                                                     Margin="30,10,30,10" />
-                                </Grid> 
+                                                     Margin="30,10,30,10"
+													 TextBlock.FontSize="18"
+													 TextBlock.FontFamily="Megaman 2" />
                                 <ControlTemplate.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Foreground" Value="DarkGoldenrod"></Setter>
+                                        <Setter TargetName="ContentSite" Property="TextBlock.Foreground" Value="DarkGoldenrod"/>
                                     </Trigger>    
                                     <Trigger Property="IsSelected" Value="False">
-                                        <Setter Property="Foreground" Value="Black"></Setter>
+                                        <Setter TargetName="ContentSite" Property="TextBlock.Foreground" Value="Black"/>
                                     </Trigger>    
                                 </ControlTemplate.Triggers>
                             </ControlTemplate>
                         </Setter.Value>
                     </Setter>
-                    <Setter Property="FontSize" Value="18"></Setter>
-                    <Setter Property="FontFamily" Value="Megaman 2"></Setter>
+
+                </Style>
+                <Style TargetType="TabControl">
+                    <Setter Property="BorderThickness" Value="0,0,0,0"></Setter>
                 </Style>
             </TabControl.Resources>
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock>Layout</TextBlock>
+                    Layout
                 </TabItem.Header>
+                <WindowsFormsHost Width="1084" Height="672" HorizontalAlignment="Left" VerticalAlignment="Top">
+                    <editor:StageForm>
+                        
+                    </editor:StageForm>
+                </WindowsFormsHost>
             </TabItem>
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock>Tiling</TextBlock>
+                    Tiling
                 </TabItem.Header>
                 <TextBlock>HI</TextBlock>
             </TabItem>
             <TabItem>
                 <TabItem.Header>
-                    <TextBlock>Entities</TextBlock>
+                    Entities
                 </TabItem.Header>
             </TabItem>
         </TabControl>

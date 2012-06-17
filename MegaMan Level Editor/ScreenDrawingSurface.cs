@@ -85,7 +85,7 @@ namespace MegaMan.LevelEditor
             RedrawJoins();
             ReDrawAll();
 
-            MainForm.Instance.DrawOptionToggled += ReDrawMaster;
+            //MainForm.Instance.DrawOptionToggled += ReDrawMaster;
 
             selectionPen = new Pen(Color.LimeGreen, 2);
             selectionPen.DashPattern = new float[] { 3, 2 };
@@ -143,7 +143,7 @@ namespace MegaMan.LevelEditor
             active = true;
             if (Activated != null) Activated();
 
-            if (MainForm.Instance.CurrentTool != null)
+            if (MainForm.Instance != null && MainForm.Instance.CurrentTool != null)
             {
                 var tool = MainForm.Instance.CurrentTool;
                 if (tool.IsIconCursor)
@@ -164,7 +164,7 @@ namespace MegaMan.LevelEditor
             active = false;
 
             Cursor = Cursors.Default;
-            if (MainForm.Instance.CurrentTool != null)
+            if (MainForm.Instance != null && MainForm.Instance.CurrentTool != null)
             {
                 var tool = MainForm.Instance.CurrentTool;
                 if (!tool.IsIconCursor && tool.Icon != null)
@@ -216,7 +216,7 @@ namespace MegaMan.LevelEditor
         {
             if (mouseLayer == null) return;
 
-            if (MainForm.Instance.CurrentTool != null)
+            if (MainForm.Instance != null && MainForm.Instance.CurrentTool != null)
             {
                 if (MainForm.Instance.CurrentTool.Icon != null && !MainForm.Instance.CurrentTool.IsIconCursor)
                 {
@@ -463,7 +463,7 @@ namespace MegaMan.LevelEditor
 
                 g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
 
-                if (MainForm.Instance.DrawTiles)
+                if (MainForm.Instance == null || MainForm.Instance.DrawTiles)
                 {
                     if (active)
                     {
@@ -478,16 +478,16 @@ namespace MegaMan.LevelEditor
 
                 g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
 
-                if (MainForm.Instance.DrawEntities && entityLayer != null)
+                if ((MainForm.Instance == null || MainForm.Instance.DrawEntities) && entityLayer != null)
                     g.DrawImageUnscaled(entityLayer, 0, 0);
 
-                if (MainForm.Instance.DrawBlock && blockLayer != null)
+                if ((MainForm.Instance != null && MainForm.Instance.DrawBlock) && blockLayer != null)
                     g.DrawImageUnscaled(blockLayer, 0, 0);
 
-                if (MainForm.Instance.DrawGrid && gridLayer != null)
+                if ((MainForm.Instance != null && MainForm.Instance.DrawGrid) && gridLayer != null)
                     g.DrawImageUnscaled(gridLayer, 0, 0);
 
-                if (MainForm.Instance.DrawJoins && joinLayer != null)
+                if ((MainForm.Instance == null || MainForm.Instance.DrawJoins) && joinLayer != null)
                     g.DrawImageUnscaled(joinLayer, 0, 0);
 
                 if (toolLayer != null)
