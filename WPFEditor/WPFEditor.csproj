@@ -7,7 +7,7 @@
     <ProjectGuid>{113536D5-91FD-48C1-92B4-10868F65232E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WPFEditor</RootNamespace>
+    <RootNamespace>MegaMan.WPFEditor</RootNamespace>
     <AssemblyName>WPFEditor</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -78,6 +78,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Entity.cs" />
+    <Compile Include="ProjectEditor.cs" />
+    <Compile Include="ScreenDocument.cs" />
+    <Compile Include="StageDocument.cs" />
+    <Compile Include="TileBrush.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -90,6 +95,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Themes\Generic.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MegaMan.LevelEditor;
 
-namespace WPFEditor
+namespace MegaMan.WPFEditor
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

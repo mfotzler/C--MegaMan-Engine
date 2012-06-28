@@ -424,7 +424,7 @@ namespace MegaMan.Common
             string[] pathdirs = path.Split(System.IO.Path.DirectorySeparatorChar);
             string[] reldirs = relativeTo.Split(System.IO.Path.DirectorySeparatorChar);
 
-            int length = Math.Min(pathdirs.Length, reldirs.Length);
+            int length = System.Math.Min(pathdirs.Length, reldirs.Length);
             StringBuilder relativePath = new StringBuilder();
 
             // find where the paths differ
