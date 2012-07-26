@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using MegaMan.Common;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace MegaMan.Engine
 {
@@ -8,36 +9,52 @@ namespace MegaMan.Engine
         public Tile Tile { get; private set; }
         public int X { get; private set; }
         public int Y { get; private set; }
-        public float ScreenX { get; private set; }
-        public float ScreenY { get; private set; }
+
+        private ScreenLayer layer;
+        private float screenX;
+        private float screenY;
+        public float ScreenX { get { return screenX + layer.LocationX; } }
+        public float ScreenY { get { return screenY + layer.LocationY; } }
 
         private readonly RectangleF basisBox;
         private readonly RectangleF boundBox;
         private readonly RectangleF flipBox;
 
-        public RectangleF BoundBox { get { return basisBox; } }
+        public RectangleF BoundBox
+        {
+            get
+            {
+                var box = basisBox;
+                box.Offset(ScreenX, ScreenY);
+                return box;
+            } 
+        }
+
         public RectangleF BlockBox
         {
             get
             {
+                var box = boundBox;
                 if (Game.CurrentGame.GravityFlip)
                 {
-                    return flipBox;
+                    box = flipBox;
                 }
-                return boundBox;
+
+                box.Offset(ScreenX, ScreenY);
+                return box;
             }
         }
 
-        public MapSquare(Screen screen, Tile tile, int x, int y, float screenX, float screenY)
+        public MapSquare(ScreenLayer layer, Tile tile, int x, int y, int tilesize)
         {
+            this.layer = layer;
             Tile = tile;
             X = x;
             Y = y;
-            ScreenX = screenX;
-            ScreenY = screenY;
+            screenX = x * tilesize;
+            screenY = y * tilesize;
 
             basisBox = Tile.Sprite.BoundBox;
-            basisBox.Offset(ScreenX, ScreenY);
             basisBox.Offset(-Tile.Sprite.HotSpot.X, -Tile.Sprite.HotSpot.Y);
 
             if (Tile.Properties.Blocking)
@@ -46,7 +63,7 @@ namespace MegaMan.Engine
             }
             else if (Tile.Properties.Climbable)
             {
-                Tile below = screen.TileAt(X, Y + 1);
+                Tile below = layer.SquareAt(ScreenX, ScreenY + tilesize).Tile;
                 if (below != null && !below.Properties.Climbable)
                 {
                     flipBox = basisBox;
@@ -55,7 +72,7 @@ namespace MegaMan.Engine
                 }
                 else flipBox = RectangleF.Empty;
 
-                Tile above = screen.TileAt(X, Y - 1);
+                Tile above = layer.SquareAt(ScreenX, ScreenY - tilesize).Tile;
                 if (above != null && !above.Properties.Climbable)
                 {
                     boundBox = basisBox;
@@ -67,6 +84,12 @@ namespace MegaMan.Engine
             {
                 flipBox = boundBox = RectangleF.Empty;
             }
+        }
+
+        public void Draw(SpriteBatch batch, Microsoft.Xna.Framework.Color color, float posX, float posY)
+        {
+            if (Tile.Sprite != null)
+                Tile.Sprite.DrawXna(batch, color, (int)posX, (int)posY);
         }
     }
 }

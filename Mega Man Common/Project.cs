@@ -7,7 +7,7 @@ using System;
 
 namespace MegaMan.Common
 {
-    public class StageInfo
+    public class StageLinkInfo
     {
         public String Name
         {
@@ -25,16 +25,16 @@ namespace MegaMan.Common
     {
         #region Game XML File Stuff
 
-        private List<StageInfo> stages = new List<StageInfo>();
+        private List<StageLinkInfo> stages = new List<StageLinkInfo>();
         
         private List<string> includeFiles = new List<string>();
 
-        public IEnumerable<StageInfo> Stages
+        public IEnumerable<StageLinkInfo> Stages
         {
             get { return stages.AsReadOnly(); }
         }
 
-        public void AddStage(StageInfo stage)
+        public void AddStage(StageLinkInfo stage)
         {
             this.stages.Add(stage);
         }
@@ -132,7 +132,8 @@ namespace MegaMan.Common
             {
                 foreach (XElement stageNode in stagesNode.Elements("Stage"))
                 {
-                    var info = new StageInfo();
+                    var info = new StageLinkInfo();
+                    info.Name = stageNode.RequireAttribute("name").Value;
                     info.StagePath = FilePath.FromRelative(stageNode.RequireAttribute("path").Value, this.BaseDir);
 
                     var winNode = stageNode.Element("Win");
